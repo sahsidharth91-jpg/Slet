@@ -3,12 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kids Alphabet Slate</title>
+<title>Alphabet Slate</title>
+
 <link rel="manifest" href="manifest.json">
+
+<style>
+body{
+ margin:0;
+ background:#1b1b1b;
+ color:white;
+ font-family:Arial;
+ text-align:center;
+}
+canvas{
+ background:#0f2a1f;
+ border:6px solid #444;
+ touch-action:none;
+}
+#letter{
+ position:absolute;
+ width:100%;
+ top:120px;
+ font-size:120px;
+ opacity:0.15;
+ pointer-events:none;
+}
+button{
+ margin:5px;
+ padding:8px;
+ background:#333;
+ color:white;
+ border:none;
+}
+</style>
 </head>
+
 <body>
+
 <h2>Alphabet Slate App</h2>
-<p>This is the full working version you requested.</p>
-<p>If you see this, hosting works correctly.</p>
+
+<div style="position:relative">
+<div id="letter">A</div>
+<canvas id="canvas" width="300" height="300"></canvas>
+</div>
+
+<br>
+<button onclick="clearBoard()">Clear</button>
+<button onclick="nextLetter()">Next</button>
+
+<script>
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("sw.js");
+}
+
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const letterBox=document.getElementById("letter");
+
+let draw=false;
+let index=0;
+const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+ctx.lineWidth=8;
+ctx.lineCap="round";
+ctx.strokeStyle="white";
+
+function guide(){
+ ctx.clearRect(0,0,300,300);
+ ctx.font="200px Arial";
+ ctx.fillStyle="rgba(255,255,255,0.15)";
+ ctx.textAlign="center";
+ ctx.fillText(letterBox.innerText,150,200);
+}
+guide();
+
+function pos(e){
+ if(e.touches){
+  return{
+   x:e.touches[0].clientX-canvas.getBoundingClientRect().left,
+   y:e.touches[0].clientY-canvas.getBoundingClientRect().top
+  };
+ }
+ return{x:e.offsetX,y:e.offsetY};
+}
+
+canvas.onmousedown=canvas.ontouchstart=e=>{
+ draw=true;
+ ctx.beginPath();
+ let p=pos(e);
+ ctx.moveTo(p.x,p.y);
+};
+
+canvas.onmousemove=canvas.ontouchmove=e=>{
+ if(!draw)return;
+ e.preventDefault();
+ let p=pos(e);
+ ctx.lineTo(p.x,p.y);
+ ctx.stroke();
+};
+
+canvas.onmouseup=canvas.ontouchend=()=>{
+ draw=false;
+ speak(letterBox.innerText);
+};
+
+function clearBoard(){
+ guide();
+}
+
+function nextLetter(){
+ index=(index+1)%26;
+ letterBox.innerText=letters[index];
+ guide();
+ speak(letterBox.innerText);
+}
+
+function speak(l){
+ speechSynthesis.cancel();
+ let u=new SpeechSynthesisUtterance(l);
+ u.rate=0.6;
+ speechSynthesis.speak(u);
+}
+</script>
+
 </body>
 </html>
